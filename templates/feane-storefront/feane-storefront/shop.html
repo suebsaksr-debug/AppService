@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop | Feane</title>
+  <!-- IMAGE PLACEHOLDER: favicon. Add images/favicon.png, then uncomment:
+  <link rel="icon" href="images/favicon.png"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main id="main">
+
+<section class="wrap block">
+  <div class="shop-layout">
+    <aside class="filters" aria-label="Filters">
+      <h4>Category</h4>
+      <div id="catLinks"></div>
+      <h4 style="margin-top:18px">Maximum price: <span id="priceVal"></span></h4>
+      <input id="price" type="range" min="0" step="1" aria-label="Maximum price">
+    </aside>
+    <div>
+      <div class="toolbar">
+        <h2 id="shopTitle" style="margin:0">All products</h2>
+        <div><span id="count" class="muted"></span>
+          <label for="sort" class="sr" style="display:inline;margin:0 6px 0 14px">Sort</label>
+          <select id="sort"><option value="">Featured</option><option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option><option value="name">Name</option></select></div>
+      </div>
+      <!-- Product photos are placeholders until you add images/products/<product-name>.jpg or set an image path in the admin page. -->
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+</section>
+</main>
+<div id="site-footer"></div>
+<script src="js/store.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+'use strict';
+var F = window.Feane, ui = F.ui, el = ui.el;
+function $(id) { return document.getElementById(id); }
+function show(kind, text) { var m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; m.hidden = false; }
+function nextPage() { var n = new URLSearchParams(location.search).get('next'); return /^[a-z-]+\.html$/.test(n || '') ? n : 'index.html'; }
+
+var P = ui.params(), q = (P.get('q') || '').toLowerCase(), cat = P.get('cat') || '';
+var all = F.products.list();
+var top = Math.ceil(Math.max.apply(null, all.map(function (p) { return p.price; }).concat([1])));
+var range = $('price'); range.max = top; range.value = top;
+if (cat) $('shopTitle').textContent = cat; else if (q) $('shopTitle').textContent = 'Results for "' + P.get('q') + '"';
+function link(label, href, on) { var a = el('a', { href: href, text: label }); if (on) a.setAttribute('aria-current', 'page'); return a; }
+$('catLinks').appendChild(link('All products', 'shop.html', !cat));
+F.categories.forEach(function (c) { $('catLinks').appendChild(link(c, 'shop.html?cat=' + encodeURIComponent(c), cat === c)); });
+function render() {
+  var lim = parseFloat(range.value); $('priceVal').textContent = F.money(lim);
+  var l = all.filter(function (p) {
+    return (!cat || p.category === cat) && p.price <= lim &&
+      (!q || (p.name + ' ' + p.description + ' ' + p.category).toLowerCase().indexOf(q) > -1);
+  });
+  var s = $('sort').value;
+  if (s === 'low') l.sort(function (a, b) { return a.price - b.price; });
+  if (s === 'high') l.sort(function (a, b) { return b.price - a.price; });
+  if (s === 'name') l.sort(function (a, b) { return a.name.localeCompare(b.name); });
+  var g = $('grid'); g.textContent = '';
+  $('count').textContent = l.length + (l.length === 1 ? ' product' : ' products');
+  if (!l.length) {
+    g.className = '';
+    g.appendChild(el('div', { class: 'empty' }, [el('h3', { text: 'No products match your filters' }),
+      el('p', { class: 'muted', text: 'Try a different category, search word or price limit.' }),
+      el('a', { class: 'btn sm', href: 'shop.html', text: 'Clear filters' })]));
+    return;
+  }
+  g.className = 'grid'; l.forEach(function (p) { g.appendChild(ui.card(p)); });
+}
+range.addEventListener('input', render); $('sort').addEventListener('change', render); render();
+})();
+</script>
+</body>
+</html>

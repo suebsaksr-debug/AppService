@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your cart | Feane</title>
+  <!-- IMAGE PLACEHOLDER: favicon. Add images/favicon.png, then uncomment:
+  <link rel="icon" href="images/favicon.png"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main id="main">
+
+<section class="wrap block">
+  <h1 style="font-size:2.4rem">Your cart</h1>
+  <div id="done" hidden></div>
+  <div class="cart-layout" id="cartLayout">
+    <div class="panel" id="cartBody"></div>
+    <aside class="panel" id="summary">
+      <h3>Order summary</h3>
+      <div class="sum"><span>Subtotal</span><span id="sub"></span></div>
+      <div class="sum"><span>Shipping</span><span id="ship"></span></div>
+      <div class="sum total"><span>Total</span><span id="total"></span></div>
+      <h3 style="margin-top:20px">Shipping details</h3>
+      <div id="msg" class="msg" role="alert" hidden></div>
+      <form id="f" novalidate>
+        <label for="name">Full name</label><input id="name" autocomplete="name" required>
+        <label for="phone">Phone number</label><input id="phone" type="tel" autocomplete="tel" required>
+        <label for="address">Shipping address</label><textarea id="address" autocomplete="street-address" required></textarea>
+        <button class="btn" type="submit" style="margin-top:18px;width:100%">Place order</button>
+      </form>
+      <p class="muted" style="margin:14px 0 0;font-size:.9rem">Demo checkout: no payment is taken. Connect a payment provider before going live.</p>
+    </aside>
+  </div>
+</section>
+</main>
+<div id="site-footer"></div>
+<script src="js/store.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+'use strict';
+var F = window.Feane, ui = F.ui, el = ui.el;
+function $(id) { return document.getElementById(id); }
+function show(kind, text) { var m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; m.hidden = false; }
+function nextPage() { var n = new URLSearchParams(location.search).get('next'); return /^[a-z-]+\.html$/.test(n || '') ? n : 'index.html'; }
+
+var user = F.current();
+if (user) $('name').value = user.name;
+function render() {
+  var items = F.cart.items(), box = $('cartBody'); box.textContent = '';
+  if (!items.length) {
+    $('summary').hidden = true; $('cartLayout').style.gridTemplateColumns = '1fr';
+    box.appendChild(el('div', { class: 'empty', style: 'border:0' }, [el('h3', { text: 'Your cart is empty' }),
+      el('p', { class: 'muted', text: 'Add something you like and it will show up here.' }),
+      el('a', { class: 'btn', href: 'shop.html', text: 'Start shopping' })]));
+    return;
+  }
+  items.forEach(function (l) {
+    var p = l.product;
+    var qty = el('input', { type: 'number', min: '1', max: '99', value: String(l.qty), 'aria-label': 'Quantity for ' + p.name });
+    qty.addEventListener('change', function () { F.cart.setQty(p.id, qty.value); ui.badge(); render(); });
+    var rm = el('button', { type: 'button', class: 'link-btn', text: 'Remove' });
+    rm.addEventListener('click', function () { F.cart.remove(p.id); ui.badge(); render(); });
+    /* IMAGE PLACEHOLDER: cart thumbnail (uses the product image, 200 × 200) */
+    box.appendChild(el('div', { class: 'line' }, [
+      el('a', { href: 'product.html?id=' + encodeURIComponent(p.id), class: 'media' }, [ui.media(p, '200 × 200')]),
+      el('div', {}, [el('strong', { text: p.name }), el('div', { class: 'muted', text: F.money(p.price) + ' each' })]),
+      el('div', { class: 'qty-cell' }, [qty]),
+      el('div', { class: 'line-total', text: F.money(p.price * l.qty) }), rm]));
+  });
+  var sub = F.cart.subtotal(), ship = F.shipping(sub);
+  $('sub').textContent = F.money(sub); $('ship').textContent = ship ? F.money(ship) : 'Free'; $('total').textContent = F.money(sub + ship);
+}
+$('f').addEventListener('submit', function (e) {
+  e.preventDefault();
+  if (!F.current()) {
+    var m = $('msg'); m.className = 'msg info'; m.hidden = false; m.textContent = 'Please ';
+    m.appendChild(el('a', { href: 'login.html?next=cart.html', text: 'log in' }));
+    m.appendChild(document.createTextNode(' or ')); m.appendChild(el('a', { href: 'register.html?next=cart.html', text: 'create an account' }));
+    m.appendChild(document.createTextNode(' to place your order. Your cart will be kept.')); return;
+  }
+  try {
+    var o = F.orders.place({ name: $('name').value, phone: $('phone').value, address: $('address').value });
+    ui.badge(); $('cartLayout').hidden = true; var d = $('done'); d.hidden = false;
+    d.appendChild(el('div', { class: 'msg ok' }, [el('strong', { text: 'Thank you, your order ' + o.id + ' is confirmed. ' }),
+      document.createTextNode('Total ' + F.money(o.total) + '. We will ship to ' + o.info.address + '.')]));
+    d.appendChild(el('a', { class: 'btn', href: 'shop.html', text: 'Keep shopping' }));
+  } catch (err) { show('error', err.message); }
+});
+render();
+})();
+</script>
+</body>
+</html>

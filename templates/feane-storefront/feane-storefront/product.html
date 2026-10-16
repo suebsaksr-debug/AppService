@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product | Feane</title>
+  <!-- IMAGE PLACEHOLDER: favicon. Add images/favicon.png, then uncomment:
+  <link rel="icon" href="images/favicon.png"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main id="main">
+
+<section class="wrap block" id="pdp"></section>
+<section class="wrap block" id="relatedWrap" hidden>
+  <div class="section-head"><h2>You may also like</h2></div>
+  <div class="grid" id="related"></div>
+</section>
+</main>
+<div id="site-footer"></div>
+<script src="js/store.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+'use strict';
+var F = window.Feane, ui = F.ui, el = ui.el;
+function $(id) { return document.getElementById(id); }
+function show(kind, text) { var m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; m.hidden = false; }
+function nextPage() { var n = new URLSearchParams(location.search).get('next'); return /^[a-z-]+\.html$/.test(n || '') ? n : 'index.html'; }
+
+var p = F.products.get(ui.params().get('id')), root = $('pdp');
+if (!p) {
+  root.appendChild(el('div', { class: 'empty' }, [el('h2', { text: 'Product not found' }),
+    el('p', { class: 'muted', text: 'It may have been removed.' }), el('a', { class: 'btn', href: 'shop.html', text: 'Back to the shop' })]));
+} else {
+  document.title = p.name + ' | Feane';
+  /* IMAGE PLACEHOLDERS: main photo (images/products/<name>.jpg) and three extra angles (<name>-2.jpg, -3.jpg, -4.jpg) */
+  var thumbs = el('div', { class: 'thumbs' }, [ui.media(p, '400 × 400', '-2'), ui.media(p, '400 × 400', '-3'), ui.media(p, '400 × 400', '-4')]);
+  var gallery = el('div', {}, [el('div', { class: 'media' }, [ui.media(p, '1000 × 1000')]), thumbs]);
+  var qty = el('input', { id: 'qty', class: 'qty', type: 'number', min: '1', max: '99', value: '1' });
+  var add = el('button', { type: 'button', class: 'btn', text: 'Add to cart' });
+  add.addEventListener('click', function () {
+    F.cart.add(p.id, qty.value); ui.badge(); ui.toast('Added ' + p.name + ' to your cart.');
+  });
+  var info = el('div', {}, [
+    el('p', { class: 'crumbs' }, [el('a', { href: 'shop.html', text: 'Shop' }), document.createTextNode(' / '),
+      el('a', { href: 'shop.html?cat=' + encodeURIComponent(p.category), text: p.category })]),
+    el('h1', { text: p.name, style: 'font-size:2.4rem' }),
+    el('div', { class: 'price', text: F.money(p.price), style: 'font-size:1.6rem' }),
+    el('p', { text: p.description || 'No description yet.', style: 'margin-top:12px' }),
+    el('div', { class: 'buy' }, [el('div', {}, [el('label', { for: 'qty', text: 'Quantity', style: 'margin-top:0' }), qty]), add]),
+    el('ul', { class: 'perks' }, [el('li', { text: 'Free shipping on orders over ' + F.money(F.freeShippingOver) }),
+      el('li', { text: '30-day returns' })])
+  ]);
+  root.appendChild(el('div', { class: 'product' }, [gallery, info]));
+  var rel = F.products.list().filter(function (x) { return x.category === p.category && x.id !== p.id; }).slice(0, 4);
+  if (rel.length) { $('relatedWrap').hidden = false; rel.forEach(function (x) { $('related').appendChild(ui.card(x)); }); }
+}
+})();
+</script>
+</body>
+</html>

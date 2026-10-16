@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Online store | Feane</title>
+  <!-- IMAGE PLACEHOLDER: favicon. Add images/favicon.png, then uncomment:
+  <link rel="icon" href="images/favicon.png"> -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/shop.css">
+</head>
+<body>
+
+
+<!-- HERO -->
+<section class="wrap hero">
+  <div>
+    <h1>Well-made things for everyday life</h1>
+    <p>Clothing, home goods and tech chosen for quality and built to last. Free shipping on orders over $50.</p>
+    <div class="actions">
+      <a class="btn" href="shop.html">Shop all products</a>
+      <a class="btn ghost" href="#featured">See featured items</a>
+    </div>
+  </div>
+  <!-- IMAGE PLACEHOLDER: hero. Replace the div below with:
+       <img src="images/hero.jpg" alt="Describe the photo" width="1200" height="900"> -->
+  <div class="ph" role="img" aria-label="Hero image placeholder" data-ph="images/hero.jpg" data-size="1200 × 900"></div>
+</section>
+
+<!-- CATEGORIES (tiles are generated from Feane.categories in js/store.js) -->
+<section class="wrap block">
+  <div class="section-head"><h2>Shop by category</h2></div>
+  <!-- IMAGE PLACEHOLDERS: one per category, saved as images/categories/<category>.jpg (600 × 450) -->
+  <div class="cat-grid" id="catGrid"></div>
+</section>
+
+<!-- FEATURED PRODUCTS (the first 4 products; product photos go in images/products/) -->
+<section class="wrap block" id="featured">
+  <div class="section-head"><h2>Featured</h2><a href="shop.html">View all products</a></div>
+  <div class="grid" id="featuredGrid"></div>
+</section>
+
+<!-- VALUE STRIP -->
+<section class="band">
+  <div class="wrap">
+    <div><h3>Free shipping over $50</h3><p>Under $50 is a flat $5.95.</p></div>
+    <!-- Edit these three promises to match your real policies. -->
+    <div><h3>30-day returns</h3><p>Not right? Send it back within 30 days.</p></div>
+    <div><h3>Real people to help</h3><p>Support is open Monday to Friday, 9am to 6pm.</p></div>
+  </div>
+</section>
+
+<!-- PROMO BANNER -->
+<section class="wrap block">
+  <div class="promo">
+    <div>
+      <h2>New season, new wardrobe</h2>
+      <p class="muted">Fresh layers, easy basics and the bags to carry them.</p>
+      <a class="btn" href="shop.html?cat=Clothing">Shop clothing</a>
+    </div>
+    <!-- IMAGE PLACEHOLDER: promo banner. Replace with <img src="images/promo.jpg" alt="..." width="1280" height="720"> -->
+    <div class="ph" role="img" aria-label="Promo image placeholder" data-ph="images/promo.jpg" data-size="1280 × 720"></div>
+  </div>
+</section>
+</main>
+<div id="site-footer"></div>
+<script src="js/store.js"></script>
+<script src="js/shell.js"></script>
+<script>
+(function () {
+'use strict';
+var F = window.Feane, ui = F.ui, el = ui.el;
+function $(id) { return document.getElementById(id); }
+function show(kind, text) { var m = $('msg'); m.className = 'msg ' + kind; m.textContent = text; m.hidden = false; }
+function nextPage() { var n = new URLSearchParams(location.search).get('next'); return /^[a-z-]+\.html$/.test(n || '') ? n : 'index.html'; }
+
+F.categories.forEach(function (c) {
+  var ph = el('div', { class: 'ph', role: 'img', 'aria-label': 'Image placeholder for ' + c,
+    'data-ph': 'images/categories/' + ui.slug(c) + '.jpg', 'data-size': '600 × 450' });
+  $('catGrid').appendChild(el('a', { href: 'shop.html?cat=' + encodeURIComponent(c), class: 'tile' }, [ph, el('span', { text: c })]));
+});
+F.products.list().slice(0, 4).forEach(function (p) { $('featuredGrid').appendChild(ui.card(p)); });
+})();
+</script>
+</body>
+</html>
